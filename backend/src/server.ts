@@ -1,12 +1,13 @@
 import express, { Application, Request, Response } from "express"
-import dotenv from "dotenv"
-dotenv.config()
-
 import cors from "cors"
 import { requestLogger } from "./middlewares/logger";
+import { env } from "./config/env"
+import { connectDB } from "./config/db";
 
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
+
+connectDB();
 
 app.use(express.json());
 app.use(
@@ -27,5 +28,5 @@ app.get("/api/health", (req: Request, res: Response) => {
 })
 
 app.listen(PORT, () => {
-  console.log(`API running on http://localhost:${PORT}`);
+  console.log(`API running on http://localhost:${env.PORT}`);
 });
