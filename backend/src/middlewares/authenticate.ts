@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { AuthRequest } from '../types';
+import { Types } from 'mongoose';
 
-export const protect = (
+export const authenticate = (
   req: AuthRequest,
   res: Response,
   next: NextFunction,
@@ -21,6 +22,7 @@ export const protect = (
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
       id: string;
       role: "user" | "leader" | "admin";
+      clubCode: string;
     };
 
     req.user = decoded;
@@ -34,3 +36,5 @@ export const protect = (
     });
   }
 };
+
+export default authenticate;

@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { Types } from 'mongoose';
 
 export interface IUser {
   firstName: string;
@@ -9,7 +10,7 @@ export interface IUser {
   role: "admin" | "user" | "leader";
   googleId?: string;
   status: "active" | "muted" | "deactivated";
-  clubId?: string;
+  clubId: Types.ObjectId;
   avatarColor: string;
   resetPasswordToken?: string;
   resetPasswordTokenExpiry?: Date;

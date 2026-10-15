@@ -3,5 +3,5 @@ import { getMe, getTeams } from "../controllers/profile.controller";
 
 const router = Router();
 
-router.get("/get-me", getMe)
-router.get("/get-teams", getTeams)
+router.get("/me", getMe)
+router.get("/teams", getTeams)

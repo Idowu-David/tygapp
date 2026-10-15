@@ -5,7 +5,7 @@ export interface IChapter {
   bookId: Types.ObjectId;
   number: number;
   title: string;
-  keyScripture?: string;
+  keyScripture: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -16,7 +16,7 @@ const chapterSchema = new Schema<IChapter>(
     bookId: { type: Schema.Types.ObjectId, ref: "Book", required: true, index: true },
     number: { type: Number, required: true },
     title: { type: String, required: true, trim: true },
-    keyScripture: { type: String, trim: true },
+    keyScripture: { type: [String], trim: true, default: [] },
   },
   { timestamps: true }
 );

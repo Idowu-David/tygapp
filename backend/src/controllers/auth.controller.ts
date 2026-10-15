@@ -8,10 +8,14 @@ import {
   getUserResetToken,
 } from "../services/auth.service";
 import bcrypt from "bcrypt";
-import crypto from "crypto"
+import crypto from "crypto";
+import { findClub, getClubId } from "../services/club.service";
 
-const generateToken = ({ id, role }: IToken): string => {
-  return jwt.sign({ id, role }, process.env.JWT_SECRET!, { expiresIn: "7d" });
+const generateToken = ({ id, role, clubCode }: IToken): string => {
+  console.log("id, role, clubcode", id, role, clubCode);
+  return jwt.sign({ id, role, clubCode }, process.env.JWT_SECRET!, {
+    expiresIn: "7d",
+  });
 };
 
 //  POST /auth/register
@@ -23,7 +27,7 @@ export const register = async (req: Request, res: Response) => {
       email,
       password,
       avatarColor,
-      clubId,
+      joinCode,
       nickname,
     } = req.body;
 
@@ -31,7 +35,8 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({
         status: "error",
         code: "INCOMPLETE_PAYLOAD",
-        message: "firstname, lastname, email and password are compulsory",
+        message:
+          "firstname, lastname, email, clubCode and password are compulsory",
       });
     }
 
@@ -45,6 +50,18 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
+    const club = await getClubId(joinCode);
+
+    if (!club) {
+      return res.status(400).json({
+        status: "error",
+        code: "CLUB_ID_ERROR",
+        message: "Failed to fetch clubId",
+      });
+    }
+
+    const clubId = club._id;
+
     const passwordHash = await bcrypt.hash(password, 10);
 
     const newUser = await addNewUser(
@@ -53,8 +70,8 @@ export const register = async (req: Request, res: Response) => {
       email,
       passwordHash,
       avatarColor,
-      nickname,
       clubId,
+      nickname,
     );
 
     if (!newUser) {
@@ -68,12 +85,12 @@ export const register = async (req: Request, res: Response) => {
     const token = generateToken({
       id: newUser._id.toString(),
       role: newUser.role,
+      clubCode: club.joinCode,
     });
 
     return res.status(201).json({
       status: "success",
-      message:
-        "User account created successfully. Please check your email for verification",
+      message: "User account created successfully.",
       data: {
         id: newUser._id.toString(),
         firstName: firstName,
@@ -84,11 +101,10 @@ export const register = async (req: Request, res: Response) => {
       token: token,
     });
   } catch (error) {
-    console.error(`Error occured during sign up: ${error}`);
-    res.status(500).json({
+    return res.status(400).json({
       status: "error",
       code: "SERVER_ERROR",
-      message: "Server error",
+      message: `An error occured: ${error}`,
     });
   }
 };
@@ -116,7 +132,7 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    const passwordCheck = bcrypt.compare(password, user.passwordHash);
+    const passwordCheck = await bcrypt.compare(password, user.passwordHash);
 
     if (!passwordCheck) {
       return res.status(401).json({
@@ -126,7 +142,14 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    const token = generateToken({ id: user._id.toString(), role: user.role });
+    const club = await findClub(String(user.clubId));
+    const clubCode = club?.joinCode as string;
+
+    const token = generateToken({
+      id: user._id.toString(),
+      role: user.role,
+      clubCode,
+    });
 
     return res.status(200).json({
       status: "success",
@@ -140,11 +163,10 @@ export const login = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error(`Error occured during login: ${error}`);
     return res.status(400).json({
       status: "error",
       code: "SERVER_ERROR",
-      message: "Server error",
+      message: `An error occured: ${error}`,
     });
   }
 };
@@ -185,8 +207,11 @@ export const forgotPassword = async (req: Request, res: Response) => {
     //     "If an account exists with this email, a reset link has been sent",
     // });
   } catch (error) {
-    console.error("Forgot password error:", error);
-    return res.status(500).json({ status: "error", message: "Server error" });
+    return res.status(400).json({
+      status: "error",
+      code: "SERVER_ERROR",
+      message: `An error occured: ${error}`,
+    });
   }
 };
 
@@ -214,24 +239,20 @@ export const resetPassword = async (req: Request, res: Response) => {
     const user = await getUserResetToken(token);
 
     if (!user) {
-      return res
-        .status(400)
-        .json({
-          status: "error",
-          code: "INVALID_TOKEN",
-          message: "Invalid or expired reset link",
-        });
+      return res.status(400).json({
+        status: "error",
+        code: "INVALID_TOKEN",
+        message: "Invalid or expired reset link",
+      });
     }
 
     // check token hasn't expired
     if (user.resetPasswordTokenExpiry! < new Date()) {
-      return res
-        .status(400)
-        .json({
-          status: "error",
-          code: "TOKEN_EXPIRED",
-          message: "Reset link has expired",
-        });
+      return res.status(400).json({
+        status: "error",
+        code: "TOKEN_EXPIRED",
+        message: "Reset link has expired",
+      });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -246,7 +267,10 @@ export const resetPassword = async (req: Request, res: Response) => {
       message: "Password reset successfully. You can now log in.",
     });
   } catch (error) {
-    console.error("Reset password error:", error);
-    return res.status(500).json({ status: "error", code: "SERVER_ERROR", message: "Server error" });
+    return res.status(400).json({
+      status: "error",
+      code: "SERVER_ERROR",
+      message: `An error occured: ${error}`,
+    });
   }
 };

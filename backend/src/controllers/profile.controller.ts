@@ -45,6 +45,7 @@ export const getTeams = async (req: Request, res: Response) => {
       status: "success",
       message: "Teams fetched successfully",
       data: teams,
+      count: teams.length,
     });
   } catch (error) {
     console.error(`An internal server error occured: ${error}`);

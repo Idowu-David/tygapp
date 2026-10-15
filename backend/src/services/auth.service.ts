@@ -1,11 +1,12 @@
 import User from "../models/User";
+import { Types } from 'mongoose';
 
 export const checkUserExists = async (email: string) => {
   return await User.findOne({ email });
 };
 
 export const checkUserDataExists = async (email: string) => {
-  return User.findOne({ email }).select("+password");
+  return User.findOne({ email }).select("+passwordHash");
 };
 
 export const addNewUser = async (
@@ -14,8 +15,8 @@ export const addNewUser = async (
   email: string,
   passwordHash: string,
   avatarColor: string,
+  clubId: Types.ObjectId,
   nickname?: string,
-  clubId?: string,
 ) => {
   return User.create({
     firstName,
@@ -23,8 +24,8 @@ export const addNewUser = async (
     email,
     passwordHash,
     avatarColor,
-    nickname,
     clubId,
+    nickname,
   });
 };
 

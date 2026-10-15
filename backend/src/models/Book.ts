@@ -6,7 +6,7 @@ export interface IBook {
   author: string;
   noOfPages: number;
   noOfChapters: number;
-  sourceLinks: { label: string; url: string }[]; // legitimate/official sources only — never host the book file
+  sourceLink: { label: string; url: string }; // legitimate/official sources only — never host the book file
   startedAt?: Date;
   endedAt?: Date;
   createdAt: Date;
@@ -25,7 +25,7 @@ const bookSchema = new Schema<IBook>(
     author: { type: String, required: true, trim: true },
     noOfPages: { type: Number, required: true },
     noOfChapters: { type: Number, required: true },
-    sourceLinks: [{ label: String, url: String }],
+    sourceLink: { label: String, url: String },
     startedAt: Date,
     endedAt: Date,
   },

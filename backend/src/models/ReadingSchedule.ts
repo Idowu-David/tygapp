@@ -4,6 +4,7 @@ export type ReadingScheduleStatus = "draft" | "published" | "closed";
 
 export interface IReadingSchedule {
   clubId: Types.ObjectId;
+  bookId: Types.ObjectId;
   chapterIds: Types.ObjectId[]; // one or more chapters bundled into this week's ReadingSchedule
   weekKey: string; // e.g. "2026-W41" — computed in the club's timezone
   title: string;
@@ -24,6 +25,11 @@ const readingScheduleSchema = new Schema<IReadingSchedule>(
       ref: "Club",
       required: true,
       index: true,
+    },
+    bookId: {
+      type: Schema.Types.ObjectId,
+      ref: "Book",
+      required: true,
     },
     chapterIds: [
       { type: Schema.Types.ObjectId, ref: "Chapter", required: true },
