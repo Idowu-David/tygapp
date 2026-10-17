@@ -1,5 +1,6 @@
 import { Chapter } from "../models/Chapter";
 import ReadingSchedule from "../models/ReadingSchedule";
+import { Types } from 'mongoose';
 
 export const getReadingSchedule = async (weekKey: string) => {
   return await ReadingSchedule.findOne({
@@ -7,7 +8,7 @@ export const getReadingSchedule = async (weekKey: string) => {
   });
 };
 
-export const readingHistory = async (clubId: string, currentBookId: string) => {
+export const readingHistory = async (clubId: Types.ObjectId, currentBookId: string) => {
   return await ReadingSchedule.find({
     clubId,
     currentBookId,
@@ -28,5 +29,11 @@ export const newChapter = async (
     title,
     keyScripture,
     number,
+  });
+};
+
+export const findReadingSchedule = async (id: string) => {
+  return await ReadingSchedule.findOne({
+    chapterIds: id,
   });
 };

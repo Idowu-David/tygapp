@@ -4,6 +4,7 @@ import {
   readingHistory,
   getReadingSchedule,
   newChapter,
+  findReadingSchedule,
 } from "../services/chapter.service";
 import { AuthRequest } from "../types";
 import { findClub } from "../services/club.service";
@@ -43,10 +44,13 @@ export const getCurrentChapter = async (req: AuthRequest, res: Response) => {
 // GET /chapters
 export const getBookHistory = async (req: AuthRequest, res: Response) => {
   try {
-    const clubId = req.user?.clubId as string;
-    
-    const club = await findClub(clubId);
+    const clubCode = req.user?.clubCode as string;
+
+    const club = await findClub(clubCode);
+    console.log(club);
     const currentBookId = club?.settings.currentBookId;
+    const clubId = club?._id!;
+
 
     const bookHistory = await readingHistory(clubId, String(currentBookId));
 
@@ -76,7 +80,7 @@ export const getBookHistory = async (req: AuthRequest, res: Response) => {
 export const addChapter = async (req: AuthRequest, res: Response) => {
   try {
     const { bookId, number, title, keyScripture } = req.body;
-    const clubId = req.user?.clubId as string;
+    const clubId = req.user?.clubCode as string;
 
     if (!bookId || !number || !title || !keyScripture) {
       return res.status(400).json({
@@ -109,3 +113,43 @@ export const addChapter = async (req: AuthRequest, res: Response) => {
     });
   }
 };
+
+// POST /chapters/:id/close
+export const closeReadingSchedule = async (req: AuthRequest, res: Response) => {
+  try {
+    const id = req.params.id as string;
+
+    const schedule = await findReadingSchedule(id);
+
+    if (!schedule) {
+      return res.status(400).json({
+        status: "error",
+        code: "NO_SCHEDULE",
+        message: "No schedule was found for this id",
+      });
+    }
+
+    schedule.status = "closed";
+    schedule.save();
+
+    return res.status(200).json({
+      status: "success",
+      message: "Reading schedule closed successfully",
+      data: schedule,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      status: "error",
+      code: "SERVER_ERROR",
+      message: `An error occured: ${error}`,
+    });
+  }
+};
+
+export const getReadingLog = async (req: AuthRequest, res: Response) => { 
+  try {
+    
+  } catch (error) {
+    
+  }
+}

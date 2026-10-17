@@ -24,7 +24,7 @@ export const newClub = async (
 };
 
 export const findClub = async (clubId: string) => {
-  return await Club.findById(clubId);
+  return await Club.findOne({joinCode: clubId});
 };
 
 export const getClubId = async (joinCode: string) => {
