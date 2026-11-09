@@ -1,7 +1,14 @@
 import { Club, IClub } from "../models/Club";
-import { ISettings, newClub, updateClub } from "../services/club.service";
+import { findBook } from "../services/book.service";
+import {
+  findClub,
+  ISettings,
+  newClub,
+  updateClub,
+} from "../services/club.service";
 import { AuthRequest } from "../types";
 import { Response } from "express";
+import { Types } from "mongoose";
 
 // POST /club
 export const addNewClub = async (req: AuthRequest, res: Response) => {
@@ -59,10 +66,9 @@ export const addNewClub = async (req: AuthRequest, res: Response) => {
 // PATCH /clubs
 export const editClub = async (req: AuthRequest, res: Response) => {
   try {
-    const clubCode = req.user?.clubCode;
-    console.log(clubCode)
+    const clubId = req.user?.clubId;
 
-    if (!clubCode) {
+    if (!clubId) {
       return res.status(401).json({
         status: "error",
         code: "UNAUTHORIZED",
@@ -145,6 +151,58 @@ export const editClub = async (req: AuthRequest, res: Response) => {
       status: "error",
       code: "INTERNAL_SERVER_ERROR",
       message: "An unexpected error occurred while updating the club",
+    });
+  }
+};
+
+// PATCH /club/current-book
+export const setCurrentBook = async (req: AuthRequest, res: Response) => {
+  try {
+    const bookId = req.body.bookId as Types.ObjectId;
+    const clubId = req.user?.clubId;
+
+    if (!clubId) {
+      return res.status(400).json({
+        status: "error",
+        code: "CLUB_ID_ERROR",
+        message: "Club ID is required",
+      });
+    }
+
+    const book = await findBook(bookId, clubId);
+
+    if (!book) {
+      return res.status(404).json({
+        status: "error",
+        message: "Book not found in this club",
+      });
+    }
+
+    const club = await findClub(clubId);
+
+    if (!club) {
+      return res.status(404).json({
+        status: "error",
+        code: "CLUB_NOT_FOUND",
+        message: "Club not found",
+      });
+    }
+
+    club.settings.currentBookId = bookId;
+    await club.save();
+
+    return res.status(200).json({
+      status: "success",
+      message: "Current book updated successfully",
+      data: {
+        currentBookId: bookId,
+      },
+    });
+  } catch (error) {
+    return res.status(400).json({
+      status: "error",
+      code: "SERVER_ERROR",
+      message: `An error occured: ${error}`,
     });
   }
 };

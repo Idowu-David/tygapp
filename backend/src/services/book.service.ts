@@ -1,4 +1,5 @@
 import { Book } from "../models/Book";
+import { Types } from "mongoose";
 
 export const newBook = async (
   clubId: string,
@@ -7,7 +8,7 @@ export const newBook = async (
   noOfPages: number,
   noOfChapters: number,
   sourceLink: { label: string; url: string },
-  startedAt?: Date 
+  startedAt?: Date,
 ) => {
   return await Book.create({
     clubId,
@@ -16,6 +17,20 @@ export const newBook = async (
     noOfPages,
     noOfChapters,
     sourceLink,
-    startedAt
+    startedAt,
   });
 };
+
+export const findBook = async (
+  bookId: Types.ObjectId,
+  clubId: Types.ObjectId,
+) => {
+  return await Book.findOne({
+    _id: bookId,
+    clubId,
+  });
+};
+
+export const getAllBooks = async () => { 
+  return await Book.find();
+}

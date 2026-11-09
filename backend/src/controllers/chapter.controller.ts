@@ -44,13 +44,18 @@ export const getCurrentChapter = async (req: AuthRequest, res: Response) => {
 // GET /chapters
 export const getBookHistory = async (req: AuthRequest, res: Response) => {
   try {
-    const clubCode = req.user?.clubCode as string;
+    const clubId = req.user?.clubId;
+    
+    if (!clubId) {
+      return res.status(400).json({
+        status: "error",
+        message: "Club ID is required",
+      });
+    }
 
-    const club = await findClub(clubCode);
-    console.log(club);
+    const club = await findClub(clubId);
+
     const currentBookId = club?.settings.currentBookId;
-    const clubId = club?._id!;
-
 
     const bookHistory = await readingHistory(clubId, String(currentBookId));
 
@@ -79,16 +84,36 @@ export const getBookHistory = async (req: AuthRequest, res: Response) => {
 // POST /chapters
 export const addChapter = async (req: AuthRequest, res: Response) => {
   try {
-    const { bookId, number, title, keyScripture } = req.body;
-    const clubId = req.user?.clubCode as string;
+    const { number, title, keyScripture } = req.body;
+    const clubId = req.user?.clubId;
 
-    if (!bookId || !number || !title || !keyScripture) {
+    if (!clubId) {
+      return res.status(400).json({
+        status: "error",
+        code: "CLUB_ID_ERROR",
+        message: "Club ID is required",
+      });
+    }
+
+    if (!number || !title || !keyScripture) {
       return res.status(400).json({
         status: "error",
         code: "INCOMPLETE_PAYLOAD",
         message: "All input fields are required",
       });
     }
+
+    const club = await findClub(clubId);
+
+      if (!club) {
+        return res.status(400).json({
+          status: "error",
+          code: "CLUB_NOT_FOUND",
+          message: "Club does not exist",
+        });
+    }
+
+    const bookId = club.settings.currentBookId!;
 
     const chapter = newChapter(clubId, bookId, number, title, keyScripture);
 
@@ -146,10 +171,7 @@ export const closeReadingSchedule = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getReadingLog = async (req: AuthRequest, res: Response) => { 
+export const getReadingLog = async (req: AuthRequest, res: Response) => {
   try {
-    
-  } catch (error) {
-    
-  }
-}
+  } catch (error) {}
+};

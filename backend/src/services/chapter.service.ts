@@ -17,8 +17,8 @@ export const readingHistory = async (clubId: Types.ObjectId, currentBookId: stri
 };
 
 export const newChapter = async (
-  clubId: string,
-  bookId: string,
+  clubId: Types.ObjectId,
+  bookId: Types.ObjectId,
   number: number,
   title: string,
   keyScripture: string[],

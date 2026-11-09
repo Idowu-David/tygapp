@@ -11,9 +11,8 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { findClub, getClubId } from "../services/club.service";
 
-const generateToken = ({ id, role, clubCode }: IToken): string => {
-  console.log("id, role, clubcode", id, role, clubCode);
-  return jwt.sign({ id, role, clubCode }, process.env.JWT_SECRET!, {
+const generateToken = ({ id, role, clubId }: IToken): string => {
+  return jwt.sign({ id, role, clubId }, process.env.JWT_SECRET!, {
     expiresIn: "7d",
   });
 };
@@ -56,7 +55,7 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({
         status: "error",
         code: "CLUB_ID_ERROR",
-        message: "Failed to fetch clubId",
+        message: "Club does not exist",
       });
     }
 
@@ -85,7 +84,7 @@ export const register = async (req: Request, res: Response) => {
     const token = generateToken({
       id: newUser._id.toString(),
       role: newUser.role,
-      clubCode: club.joinCode,
+      clubId,
     });
 
     return res.status(201).json({
@@ -142,13 +141,23 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    const club = await findClub(String(user.clubId));
-    const clubCode = club?.joinCode as string;
+    const club = await findClub(user.clubId);
+    console.log("club: ", user.clubId);
+
+    if (!club) {
+      return res.status(400).json({
+        status: "error",
+        code: "CLUB_ID_ERROR",
+        message: "Club does not exist",
+      });
+    }
+
+    const clubId = club?._id;
 
     const token = generateToken({
       id: user._id.toString(),
       role: user.role,
-      clubCode,
+      clubId,
     });
 
     return res.status(200).json({

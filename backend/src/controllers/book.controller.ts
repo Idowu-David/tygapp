@@ -1,26 +1,27 @@
 import { Response } from "express";
 import { AuthRequest } from "../types";
-import { newBook } from "../services/book.service";
+import { findBook, getAllBooks, newBook } from "../services/book.service";
 
 // POST /book
 export const addNewBook = async (req: AuthRequest, res: Response) => {
   try {
-    const {
-      clubId,
-      title,
-      author,
-      noOfPages,
-      noOfChapters,
-      startedAt,
-      label,
-      url,
-    } = req.body;
+    const { title, author, noOfPages, noOfChapters, startedAt, label, url } =
+      req.body;
 
-    if (!clubId || !title || !author || !noOfPages || !noOfChapters) {
+    const clubId = req.user?.clubId;
+
+    if (!title || !author || !noOfPages || !noOfChapters) {
       return res.status(400).json({
         status: "error",
         code: "ALL_FIELDS_REQUIRED",
         message: "All input fields are required",
+      });
+    }
+
+    if (!clubId) {
+      return res.status(400).json({
+        status: "error",
+        message: "Club ID is required",
       });
     }
 
@@ -42,13 +43,13 @@ export const addNewBook = async (req: AuthRequest, res: Response) => {
 
     const sourceLink = { label, url };
     const book = await newBook(
-      clubId,
+      String(clubId),
       title,
       author,
       noOfPages,
       noOfChapters,
       sourceLink,
-      startedAt
+      startedAt,
     );
 
     if (!book) {
@@ -72,3 +73,37 @@ export const addNewBook = async (req: AuthRequest, res: Response) => {
     });
   }
 };
+
+export const getBooks = async (req: AuthRequest, res: Response) => { 
+  try {
+    const clubId = req.user?.clubId;
+
+    if (!clubId) {
+      return res.status(400).json({
+        status: "error",
+        code: "CLUB_ID_ERROR",
+        message: "User does not have a club",
+      });
+    }
+
+    const books = await getAllBooks();
+
+    if (!books) {
+      return res.status(400).json({
+        status: "error",
+        code: "BOOK_NOT_FOUND",
+        message: "Books not found",
+      });
+    }
+
+    return res.status(200).json({
+      status: "success",
+      message: "Books fetched successfully",
+      data: books
+    })
+
+
+  } catch (error) {
+    
+  }
+}
